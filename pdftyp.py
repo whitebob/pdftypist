@@ -1,6 +1,7 @@
 #!/bin/env python3 
 import sys
 import subprocess
+import tempfile
 import getpass
 
 from pdfminer.pdfparser import PDFParser, PDFDocument
@@ -87,14 +88,24 @@ def convert_pdf_to_txt(pdf_path, password=None):
     print(f"PDF转TYP完成，结果保存在：{txt_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) not in [2, 3]:
+    if len(sys.argv) not in [1, 2, 3]:
         print("Usage: python pdf_to_txt.py <pdf_file_path> [<password>]")
     else:
-        pdf_file_path = sys.argv[1]
+        if len(sys.argv) == 1:
+            with tempfile.NamedTemporaryFile(delete=True) as tmpfile:
+                command = ['ranger', '--choosefile', tmpfile.name]
+                subprocess.run(command)
+                pdf_file_path = open(tmpfile.name).read().strip()
+                print(pdf_file_path)
+                tmpfile.close()
+        else:
+            pdf_file_path = sys.argv[1]
+
         if len(sys.argv) == 3:
             password = sys.argv[2]
         else:
             password = None
+
         convert_pdf_to_txt(pdf_file_path, password)
         subprocess.run(['gtypist', "-e", str(errate), "-c", color["green"]+','+color["black"], f"{os.path.splitext(pdf_file_path)[0]}.typ"])
         subprocess.run(['rm', f"{os.path.splitext(pdf_file_path)[0]}.typ"])
