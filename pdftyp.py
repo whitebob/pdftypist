@@ -1,4 +1,5 @@
 import sys
+import subprocess
 import getpass
 
 from pdfminer.pdfparser import PDFParser, PDFDocument
@@ -10,6 +11,10 @@ from pdfminer.layout import LAParams
 
 import io
 import os
+
+
+errate = 100.0
+color = {"black":"0", "white":"7", "red":"1", "green":"2",  "blue":"4", "cyan":"6", "yellow":"3", "magneta":"5"}
 
 def convert_pdf_to_txt(pdf_path, password=None):
     rsrcmgr = PDFResourceManager()
@@ -28,9 +33,10 @@ def convert_pdf_to_txt(pdf_path, password=None):
     with open(pdf_path, 'rb') as fp:
         retstr = io.StringIO()
         #retstr.write("D:OK\n")
-        retstr.write("S:\n")
         cnt = 1 
         index = 1
+        retstr.write(str.format("B: Page {}. Tips: Press <Esc> key twice to quit in typing process\n", index))
+        retstr.write("S:\n")
         doc = PDFDocument()
         doc.initialize("")
         parser = PDFParser(fp)
@@ -53,7 +59,7 @@ def convert_pdf_to_txt(pdf_path, password=None):
                                 else:
                                     cnt = 0
                                     index = index + 1
-                                    retstr.write(str.format("B: Page {}\n", index))
+                                    retstr.write(str.format("B: Page {}. Tips: Press <Esc> key twice to quit in typing process\n", index))
                                     #retstr.write("D:")
                                     retstr.write("S:")
                                 retstr.write(line)
@@ -89,6 +95,8 @@ if __name__ == "__main__":
         else:
             password = None
         convert_pdf_to_txt(pdf_file_path, password)
+        subprocess.run(['gtypist', "-e", str(errate), "-c", color["green"]+','+color["black"], f"{os.path.splitext(pdf_file_path)[0]}.typ"])
+        subprocess.run(['rm', f"{os.path.splitext(pdf_file_path)[0]}.typ"])
 
 # 或者仅通过命令行调用时接收密码参数，如果未提供则提示用户输入
 # if len(sys.argv) != 2:
